@@ -1,195 +1,14 @@
-from abc import ABC, abstractmethod
-class Document(ABC):
-    def __init__(self,titre,auteur,disponible=True):
-        self.titre = titre
-        self.auteur = auteur
-        self.__disponible = disponible
-
-    @property
-    def disponible(self):
-        return self.__disponible
-    
-    @disponible.setter
-    def disponible(self, valeur):
-        self.__disponible = valeur
-        return self.__disponible
-
-    @abstractmethod
-    def emprunter(self):
-        pass
-    
-    @abstractmethod
-    def retourner(self):
-        pass    
-
-class Livre(Document):
-    def __init__(self, titre, auteur, disponible=True):
-        super().__init__(titre, auteur, disponible)
-    
-    def emprunter(self):
-        if not self.disponible:
-            print(f"Le livre {self.titre} est deja emprunte")
-        else:
-            self.disponible = False
-            print('Livre emprunte avec succès.')
-            
-    def retourner(self):
-        if self.disponible:
-            print("Ce livre n'est pas encore emprunté impossible de retourner")
-            return
-        
-        self.disponible = True
-        print("Livre retourné avec succès.")
-    
-    def __str__(self):
-       
-        if self.disponible == True:
-            dispo = "Disponible"
-        else:
-            dispo = "Emprunté"
-        return f"Livre: {self.titre} - Auteur: {self.auteur} - Statut:[{dispo}]"
-
-    
-class Magazine(Document):
-    def __init__(self, titre, auteur, frequence ,disponible=True):
-        super().__init__(titre, auteur, disponible)
-        self.frequence=frequence
-
-    def emprunter(self):
-        if not self.disponible:
-            print(f"Ce Magazine {self.titre} n'est pas encore retouné")
-        else:
-            self.disponible = False
-            print('Magazine emprunte avec succès.')
-            
-    
-    def retourner(self):
-        if self.disponible:
-            print("Magazine n'est pas encore emprunté impossible de retourner")
-            return
-        
-        self.disponible = True
-        print("magazine retourné avec succès.")
-
-    def __str__(self):
-        
-        if self.disponible == True:
-            dispo = "Disponible"
-        else:
-            dispo = "Emprunté"
-        return f"Magazine: {self.titre} - Auteur: {self.auteur} - Frequence: {self.frequence} - Statut:[{dispo}]"
-
-
-
-class Adherant:
-    def __init__(self,nom):
-        self.nom = nom
-        self.listeEmprunts = []  
-
-    def __str__(self):
-        
-        return f"Adherent: {self.nom}"   
-    
-
-class Bibliothecaire:
-   
-    def __init__(self):
-        self.catalogues = []
-        self.liste_adherants = []
-    
-    def ajouter_document(self, doc):
-        """Permet d'ajouter un document dans la liste des catalogues"""
-        self.catalogues.append(doc)
-        print(f"{doc.titre} ajouté avec succes")
-
-    def InscrireMembre(self,nom):
-        """Permet d'inscrire un membre en tant qu'adherant de notre bibliotheque en l'ajoutant dans la liste"""
-        adherant= Adherant(nom)
-
-        self.liste_adherants.append(adherant)
-        print("Membre ajoute")
-
-
-    def Lister_document(self):
-        """Permet de lister tout notre catalogue"""
-        if self.catalogues==[]:
-            print("La liste est vide")
-        else:
-            for doc in self.catalogues:
-                print(doc)  
-
-    def Lister_Emprunt(self,nom_adherant):
-        """Permet d'afficher la liste des emprunts d'un adhérant"""
-        adherant_trouver=None
-        if self.liste_adherants==[]:
-            print("la liste est vide")
-        else:
-            for adherant in self.liste_adherants:
-                if adherant.nom == nom_adherant:
-                    adherant_trouver = adherant
-                    
-            if not adherant_trouver.listeEmprunts:
-                print("Aucun n'emprunt")
-
-            for i in adherant_trouver.listeEmprunts:
-                print(i)       
-
-        
-    def Lister_membres(self):
-        """Permet de lister les adherants de la bibliotheque"""
-        if self.liste_adherants==[]:
-            print("La liste des membres est vide")
-        else:
-            for membre in self.liste_adherants:
-                print(membre)                
-
-    
-    def valider_pret(self, nom_membre, titre_document):
-        """Permet de valider un emprunt d'un document"""
-
-        document_trouvee = None
-        for document in self.catalogues:
-            if document.titre==titre_document:
-                document_trouvee = document
-
-        if not document_trouvee :
-            print("Document introuvable")       
-            return      
-
-        membre_trouvee = None
-        for m in self.liste_adherants:
-            if m.nom == nom_membre:
-                membre_trouvee =  m
-
-        if not membre_trouvee :
-            print("Membre introuvable")       
-            return
-        
-        document_trouvee.emprunter()
-
-        membre_trouvee.listeEmprunts.append(document_trouvee)
-
-    def confirmerRetour(self,titre):
-        """Permet de confimer le retour d'un document"""
-        document_trouvee= None
-        
-
-        for doc in self.catalogues:
-            if doc.titre == titre:
-                document_trouvee= doc
-            
-        if not document_trouvee :
-            print("Document introuvable")       
-            return
-        
-        document_trouvee.retourner()    
+from Models.abstract_document import Document
+from Models.livre import Livre
+from Models.magazine import Magazine
+from Models.bibliothecaire import Bibliothecaire 
             
         
-class Menu:
+class Main:
     def __init__(self):
         self.bibliotheque = Bibliothecaire()
 
-    def executer(self):
+    def Menu(self):
 
         while True:
             print("\n", "-" * 10, "BIBLIOTHEQUE", "-" * 10)
@@ -237,9 +56,6 @@ class Menu:
                     except ValueError as e:
                         print("ERREUR: ",e)
 
-
-
-                
                 case "3":
                     self.bibliotheque.Lister_document()
 
@@ -310,8 +126,8 @@ class Menu:
                     print("choix invalide")  
 
              
-menu=Menu()
-menu.executer()
+menu = Main()
+menu.Menu()
 
     
 
