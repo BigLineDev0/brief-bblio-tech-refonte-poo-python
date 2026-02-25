@@ -1,8 +1,8 @@
 from Models.abstract_document import Document
 
 class Livre(Document):
-    def __init__(self, titre, auteur, disponible=True):
-        super().__init__(titre, auteur, disponible)
+    def __init__(self, titre, auteur, type_doc, disponible=True):
+        super().__init__(titre, auteur, type_doc, disponible)
     
     def emprunter(self):
         if not self.disponible:

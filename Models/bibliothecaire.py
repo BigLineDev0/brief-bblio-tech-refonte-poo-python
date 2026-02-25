@@ -1,94 +1,189 @@
 from Models.adherant import Adherant
-
+from Models.database import maconnexion
 class Bibliothecaire:
    
     def __init__(self):
         self.catalogues = []
         self.liste_adherants = []
     
-    def ajouter_document(self, doc):
+    def ajouter_Magazine(self, doc):
         """Permet d'ajouter un document dans la liste des catalogues"""
-        self.catalogues.append(doc)
-        print(f"{doc.titre} ajouté avec succes")
+        try:
+            cursor = maconnexion.cursor()
+            query="insert into catalogues(titre,auteur,type,frequence) values(%s,%s,%s,%s)"
+            cursor.execute(query,(doc.titre, doc.auteur, doc.type_doc, doc.frequence))
+            maconnexion.commit()
+            print(f"{doc.titre} ajouté avec succes")
 
-    def InscrireMembre(self,nom):
+        except Exception as e:
+            print("Erreur.", e)
+        
+        cursor.close()
+        
+
+    def ajouter_Livre(self, doc):
+        """Permet d'ajouter un document dans la liste des catalogues"""
+        try:
+            cursor=maconnexion.cursor()
+            query=" insert into catalogues(titre,auteur,type) values(%s,%s,%s)"
+            cursor.execute(query,(doc.titre,doc.auteur,doc.type_doc))
+            maconnexion.commit()
+            print(f"{doc.titre} ajouté avec succes")
+
+        except Exception as e:
+            print("Erreur.", e)
+        
+        cursor.close()
+
+    def InscrireMembre(self, i: Adherant): # la variable i est type objet
         """Permet d'inscrire un membre en tant qu'adherant de notre bibliotheque en l'ajoutant dans la liste"""
-        adherant= Adherant(nom)
+        try:
+            cursor=maconnexion.cursor()
+            query="insert into adherants(nom) values(%s)"
+            cursor.execute(query,(i,))
+            maconnexion.commit()
 
-        self.liste_adherants.append(adherant)
-        print("Membre ajoute")
-
+            print("Membre ajoute ")
+            
+        except Exception as e:
+            print("Erreur.", e)
+        
+        cursor.close()
 
     def Lister_document(self):
         """Permet de lister tout notre catalogue"""
-        if self.catalogues==[]:
-            print("La liste est vide")
-        else:
-            for doc in self.catalogues:
-                print(doc)  
+       
+        try:
+            cursor=maconnexion.cursor()
+            query="select * from catalogues"
+            cursor.execute(query)
+            liste_catalogue=cursor.fetchall()
+            
+            if not liste_catalogue:
+                print("la liste est vide")
+            else:
+               for i in liste_catalogue:
+                   
+                   print(i)   
+            
+        
+        except Exception as e:
+            print("Erreur.", e)
+        
+        cursor.close()
+            
 
-    def Lister_Emprunt(self,nom_adherant):
+         
+    def Lister_Emprunt(self,id_adherant):
         """Permet d'afficher la liste des emprunts d'un adhérant"""
-        adherant_trouver=None
-        if self.liste_adherants==[]:
-            print("la liste est vide")
+
+        cursor=maconnexion.cursor()
+        query="""
+        SELECT a.nom , c.titre, e.date_emprunt, e.date_retour_programme from adherants as a 
+        join emprunts as e on e.id_adherant=a.id 
+        join catalogues as c on e.id_catalogue=c.id where a.id=%s
+        """
+        cursor.execute(query,(id_adherant,))
+        adherant=cursor.fetchall()
+        if not adherant :
+            print("La liste est vide")
+     
         else:
-            for adherant in self.liste_adherants:
-                if adherant.nom == nom_adherant:
-                    adherant_trouver = adherant
-                    
-            if not adherant_trouver.listeEmprunts:
-                print("Aucun n'emprunt")
-
-            for i in adherant_trouver.listeEmprunts:
-                print(i)       
-
+            for i in adherant:
+                print(i)
         
     def Lister_membres(self):
         """Permet de lister les adherants de la bibliotheque"""
-        if self.liste_adherants==[]:
-            print("La liste des membres est vide")
-        else:
-            for membre in self.liste_adherants:
-                print(membre)                
+        try:
+            cursor=maconnexion.cursor()
+            query="select * from adherants"
+            cursor.execute(query)
+            liste_membres=cursor.fetchall()
+            
+            if not liste_membres:
+                print("la liste est vide")
+            else:
+               for i in liste_membres:
+                   
+                    print(i)   
+            
+        
+        except Exception as e:
+            print("Erreur.", e)
+        
+        cursor.close()             
 
     
-    def valider_pret(self, nom_membre, titre_document):
+    def valider_pret(self, id_membre, id_document,date_retour_programme):
         """Permet de valider un emprunt d'un document"""
-
-        document_trouvee = None
-        for document in self.catalogues:
-            if document.titre==titre_document:
-                document_trouvee = document
-
-        if not document_trouvee :
-            print("Document introuvable")       
-            return      
-
-        membre_trouvee = None
-        for m in self.liste_adherants:
-            if m.nom == nom_membre:
-                membre_trouvee =  m
-
-        if not membre_trouvee :
-            print("Membre introuvable")       
-            return
-        
-        document_trouvee.emprunter()
-
-        membre_trouvee.listeEmprunts.append(document_trouvee)
-
-    def confirmerRetour(self,titre):
-        """Permet de confimer le retour d'un document"""
-        document_trouvee= None
         
 
-        for doc in self.catalogues:
-            if doc.titre == titre:
-                document_trouvee= doc
+        try:
+            cursor=maconnexion.cursor()
+            query="select * from catalogues where id=%s"
+            cursor.execute(query,(id_document,))
+            document=cursor.fetchone()
             
-        if not document_trouvee :
-            print("Document introuvable")       
-            return
+            if not document:
+                print("Le document est introuvable")
+           
+            query="select * from adherants where id= %s"
+            cursor.execute(query,(id_membre,))  
+            membre=cursor.fetchone()  
+            if not membre:
+                print("Ce membre est introuvable")
+
+            cursor.execute("SELECT * FROM emprunts WHERE status = 'Emprunte'")
+
+            if cursor.fetchone():
+                print("Ce document est deja emprunté.")
+                return
+            else: 
+                query="insert into emprunts(id_adherant,id_catalogue,date_retour_programme) values(%s,%s,%s)"
+                cursor.execute(query,(id_membre,id_document,date_retour_programme))
+                maconnexion.commit()
+                print("L'emprunt est valide avec succes")
+
+        except Exception as e:
+            print("Erreur.", e)
         
-        document_trouvee.retourner()   
+        cursor.close()
+
+
+       
+
+    def confirmerRetour(self,id_membre, id_document):
+        """Permet de confimer le retour d'un document"""
+
+        try:
+
+            cursor=maconnexion.cursor()
+            cursor.execute("select * from adherants where id=%s", (id_membre,))
+            adherant=cursor.fetchone()
+
+            if not adherant:
+                print("Le membre n'est pas trouve")
+
+            cursor.execute("select * from catalogues where id=%s", (id_document,))    
+            document=cursor.fetchone()
+
+            if not document:
+                print("Le document est introuvable")
+
+            query="""
+            update emprunts set date_retour = NOW(), status='Restitue' 
+            where id_catalogue=%s and id_adherant=%s
+            """ 
+            cursor.execute(query,(id_membre,id_document))
+            maconnexion.commit()
+            print("Le document est rendu avec succes ")
+        except Exception as e:
+            print("Erreur.", e)
+        
+        cursor.close()
+    
+
+
+
+
+

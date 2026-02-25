@@ -1,1 +1,7 @@
 Models/__pycache__/
+Models/database.py
+*.pyc
+.env/
+.venv/
+env/
+.vscode

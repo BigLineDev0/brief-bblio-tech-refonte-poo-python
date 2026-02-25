@@ -1,8 +1,8 @@
 from Models.abstract_document import Document
 
 class Magazine(Document):
-    def __init__(self, titre, auteur, frequence ,disponible=True):
-        super().__init__(titre, auteur, disponible)
+    def __init__(self, titre, auteur, type_doc, frequence,disponible=True):
+        super().__init__(titre, auteur, type_doc, disponible)
         self.frequence=frequence
 
     def emprunter(self):
