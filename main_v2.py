@@ -4,12 +4,46 @@ from Models.magazine import Magazine
 from Models.bibliothecaire import Bibliothecaire 
 from Models.adherant import Adherant
 from datetime import datetime
+import bcrypt
+from Models.authentification import Authentification
             
         
 class Main:
     def __init__(self):
         self.bibliotheque = Bibliothecaire()
+        self.user_connect = None
 
+
+
+    def Menu_authentification(self):
+        while True:
+
+            print("\n", "-" * 10, "AUTHENTIFICATION", "-" * 10)
+            print("1- S'inscire\n" \
+                 "2- Se connecter\n")
+            
+            choix=input("\nVotre Choix: ")
+
+            match choix:
+                case "1":
+                    nom=input("Nom: ").strip()
+                    prenom=input("Prenom: ").strip()
+                    email=input("Email: ").strip()
+                    password=input("Mot de passe: ").encode().strip()
+                    passwordHash=bcrypt.hashpw(password, bcrypt.gensalt())
+                    self.bibliotheque.inscription(Authentification(nom,prenom,email,passwordHash))
+
+                case "2":
+                    email=input("Email: ")
+                    password=input("Mot de passe: ")
+                    self.user_connect = self.bibliotheque.connexion(email,password)
+                    if self.user_connect:
+                        self.Menu()
+                    else:
+                        print("ERREUR CONNEXION")
+                        self.Menu_authentification()
+                case _: 
+                    print("Choix invalide")
 
     def Menu(self):
 
@@ -27,19 +61,15 @@ class Main:
 
                 return valeur
                         
-                    
-
-    
         while True:
             print("\n", "-" * 10, "BIBLIOTHEQUE", "-" * 10)
-            print("1: Ajouter Livre \n" \
-            "2: Ajouter un magazine \n" \
-            "3: Afficher le catalogue \n" \
-            "4: Inscrire membres \n" \
-            "5: Afficher membres \n" \
-            "6: Valider pret \n" \
+            print("1: Ajouter un document \n" \
+            "2: Afficher documents \n" \
+            "3: Inscrire membres \n" \
+            "4: Afficher membres \n" \
+            "5: Valider pret \n" \
+            "6: Confirmer un retour\n"
             "7: Afficher les emprunts d'un adherant \n"
-            "8: Confirmer un retour\n"
             "0: Quitter")
 
             choix = input("\nEntrez votre choix : ")
@@ -48,54 +78,45 @@ class Main:
                 case "1":
                     
                     try:
-                        titre = validerChaine("Titre: ")
+                        titre = validerChaine("Titre : ")
 
-                        auteur = validerChaine("auteur: ")
-                        type = input("type: ").upper()
+                        auteur = validerChaine("Auteur : ")
+                        type = input("Type : ").upper()
 
                         if not type in ["LIVRE", "MAGAZINE"]:
                             raise ValueError("Type doit etre LIVRE ou MAGAZINE")
-
-                        self.bibliotheque.ajouter_Livre(Livre(titre, auteur, type))
                         
+                        if type == "LIVRE":
+
+                            self.bibliotheque.ajouter_Livre(Livre(titre, auteur, type))
+
+                        if type == "MAGAZINE":
+                            frequence=input("Frequence : ").lower()
+                            if not frequence in ["hebdomadaire", "journaliere" ,"mensuelle"]:
+                                raise ValueError("la frequence doit etre hebdomadaire, journaliere ou mensuelle")
+                            
+                            self.bibliotheque.ajouter_Magazine(Magazine(titre, auteur, type, frequence))
 
                     except ValueError as e:
                         print("ERREUR: ",e)
-
 
                 case "2":
-                    try:
-                        titre = validerChaine("Titre: ")
-
-                        auteur = validerChaine("auteur: ")
-
-                        type= input("type: ").upper()
-                        frequence=input("frequence : ").lower()
-                        if not frequence in ["hebdomadaire", "journaliere" ,"mensuelle"]:
-                            raise ValueError("la frequence doit etre hebdomadaire, journaliere ou mensuelle")
-                        
-                        self.bibliotheque.ajouter_Magazine(Magazine(titre, auteur, type, frequence))
-
-                    except ValueError as e:
-                        print("ERREUR: ",e)
-
-                case "3":
                     self.bibliotheque.Lister_document()
 
-                case '4':
+                case '3':
                     try:
-                        nom = input("Nom : ")
+                        nom = input("Nom Membre: ")
                         if nom.isnumeric():
                             raise ValueError('NOm invalide')
-                        # adherant=Adherant(nom)
-                        self.bibliotheque.InscrireMembre(nom)
+                        
+                        self.bibliotheque.InscrireMembre(Adherant(nom))
                     except ValueError as e:
                         print("Erreur : ", e)
 
-                case '5':
+                case '4':
                     self.bibliotheque.Lister_membres()
                 
-                case '6':
+                case '5':
                    
                     print('------------------Liste des adherants-------------------')
                     self.bibliotheque.Lister_membres()
@@ -130,20 +151,8 @@ class Main:
                         
                     except ValueError:
                         print("Format invalide. Utilise YYYY/MM/DD")
-                    
 
-                case '7':
-                    print('----------------Liste des adherants--------------')
-                    self.bibliotheque.Lister_membres()
-                    try:
-                        id_adherant=input('id_adherant: ')
-                        if not id_adherant.isnumeric():
-                            raise ValueError("le id_adherant doit etre un chiffre")
-                        self.bibliotheque.Lister_Emprunt(id_adherant)
-                    except ValueError as e:
-                        print("Erreur : ", e)
-
-                case "8":
+                case "6":
                         
                     print('----------------Liste des adherants--------------')
                     self.bibliotheque.Lister_membres()
@@ -168,6 +177,17 @@ class Main:
 
                     self.bibliotheque.confirmerRetour(id_membre, id_document)
 
+                case '7':
+                    print('----------------Liste des adherants--------------')
+                    self.bibliotheque.Lister_membres()
+                    try:
+                        id_adherant=input('id_adherant: ')
+                        if not id_adherant.isnumeric():
+                            raise ValueError("le id_adherant doit etre un chiffre")
+                        self.bibliotheque.Lister_Emprunt(id_adherant)
+                    except ValueError as e:
+                        print("Erreur : ", e)
+
                 case '0':
                     print("BYE")
                     break  
@@ -175,9 +195,10 @@ class Main:
                 case _:
                     print("choix invalide")  
 
-             
+
+            
 menu = Main()
-menu.Menu()     
+menu.Menu_authentification()     
 
 
 

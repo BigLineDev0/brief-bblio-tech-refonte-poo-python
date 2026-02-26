@@ -36,7 +36,6 @@ class Bibliothecaire:
         print("Livre ajouter avec succes")
 
 
-
     def InscrireMembre(self,nom):
         adherant= Adherant(nom)
 

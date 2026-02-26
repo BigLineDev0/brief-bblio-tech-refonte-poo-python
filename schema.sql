@@ -29,6 +29,18 @@ CREATE TABLE emprunts (
     FOREIGN KEY (id_catalogue) REFERENCES catalogues(id)
 )
 
+
+CREATE TABLE utilisateurs(
+    id int PRIMARY KEY AUTO_INCREMENT,
+    nom varchar(100) not null,
+    prenom varchar(100) not null,
+    email varchar(100) unique not null ,
+    password varchar(100) unique not null,
+    role enum("admin", "user") DEFAULT "admin"
+);
+
+
+
 SELECT a.nom , c.titre, e.date_emprunt, e.date_retour_programme from adherants as a 
 join emprunts as e on e.id_adherant=a.id 
 join catalogues as c on e.id_catalogue=c.id;
